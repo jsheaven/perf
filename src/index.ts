@@ -173,7 +173,7 @@ export async function* perfStreamed(
   algorithms: Array<AlgorithmCandidate>,
   sizes: Array<Size> = defaultSizes,
   warm: boolean = true,
-  iterations: number = 1000,
+  iterations: number = 100,
   maxExecutionTime = 30000,
   chunkSize = 10,
 ): AsyncGenerator<AveragedIntermediateTestResultPerSize, void, AveragedUnionTestResultPerSize> {
@@ -273,7 +273,7 @@ export async function perf(
   algorithms: Array<AlgorithmCandidate>,
   sizes: Array<Size> = defaultSizes,
   warm = true,
-  iterations = 1000,
+  iterations = 100,
   maxExecutionTime = 30000,
   chunkSize = 10,
 ): Promise<AveragedUnionTestResultPerSize> {
