@@ -1,27 +1,17 @@
 import { info, warn } from '@jsheaven/status-message'
 
-export enum Size {
-  XS = 1,
-  S = 10,
-  M = 100,
-  L = 1000,
-  XL = 10000,
-}
-
-export const SizeKeys = Object.keys(Size)
-
 export const defaultSizes = [
   1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
 ]
 
-export type AlgorithmFn = (size: Size) => Promise<void>
+export type AlgorithmFn = (size: number) => Promise<void>
 
 export type TestResult = {
   name: string
   duration: number
-  size: Size
+  size: number
 }
-export const test = async (name: string, fn: AlgorithmFn, size: Size): Promise<TestResult> => {
+export const test = async (name: string, fn: AlgorithmFn, size: number): Promise<TestResult> => {
   const startTime = process.hrtime()
   try {
     await fn(size)
@@ -133,11 +123,6 @@ export interface RuntimeState {
 }
 
 export interface AveragedTestResultPerSize {
-  XS: AveragedTestResult
-  S: AveragedTestResult
-  M: AveragedTestResult
-  L: AveragedTestResult
-  XL: AveragedTestResult
   complexity: number
   duration: number
   estimatedDomains: Array<ComplexityDomain>
@@ -153,7 +138,6 @@ export interface AveragedIntermediateTestResultPerSize {
 }
 
 export const getGrowthRate = (durations: number[]): number => {
-  //console.log('getGrowthRate', durations)
   const logArray = durations.map((x) => Math.log(x))
   const n = logArray.length
   const sumX = logArray.reduce((acc, val, i) => acc + i, 0)
@@ -171,7 +155,7 @@ export const filterFirst25Percent = (results: Array<TestResult>, iterations: num
 
 export async function* perfStreamed(
   algorithms: Array<AlgorithmCandidate>,
-  sizes: Array<Size> = defaultSizes,
+  sizes: Array<number> = defaultSizes,
   warm: boolean = true,
   iterations: number = 100,
   maxExecutionTime = 30000,
@@ -194,13 +178,10 @@ export async function* perfStreamed(
     averagedResult[name] = {
       complexity: 0,
     } as any
-    for (const size of sizes) {
-      const sizeName = size
 
-      averagedResult[name][sizeName] = {
-        averageDuration: 0,
-        calls: 0,
-      }
+    let averageDurations = []
+    for (const size of sizes) {
+      let calls = 0
 
       const resultsPerSize: Array<TestResult> = []
 
@@ -208,7 +189,7 @@ export async function* perfStreamed(
         const testResults = await Promise.all(
           chunk.map(async () => {
             const { duration } = await test(name, fn, size)
-            averagedResult[name][sizeName].calls++
+            calls++
 
             return { name, size, duration }
           }),
@@ -225,7 +206,6 @@ export async function* perfStreamed(
 
         if (timePassed >= maxExecutionTime) {
           warn('MAX_EXECUTION_TIME', 'Maximum execution time exceeded. Yielding incomplete measurement result')
-          delete averagedResult[name][sizeName] // disregard partial data
           yield { done: true, value: averagedResult }
         }
       }
@@ -238,20 +218,16 @@ export async function* perfStreamed(
 
       const warmSubtrahend = warm ? get25Percent(iterations) : 0
 
-      averagedResult[name][sizeName].averageDuration =
-        duration / (averagedResult[name][sizeName].calls - warmSubtrahend)
+      averageDurations.push(duration / (calls - warmSubtrahend))
 
       // correct the number calls that were measured / counted in
-      averagedResult[name][sizeName].calls -= warmSubtrahend
+      calls -= warmSubtrahend
     }
 
-    const durations: Array<number> = Object.keys(averagedResult[name])
-      .filter((name) => name !== 'complexity')
-      .map((size, i) => averagedResult[name][size].averageDuration)
-
-    averagedResult[name].duration = durations.reduce((a, b) => a + b, 0)
-    averagedResult[name].complexity = getGrowthRate(durations)
+    averagedResult[name].duration = averageDurations.reduce((a, b) => a + b, 0)
+    averagedResult[name].complexity = getGrowthRate(averageDurations)
     averagedResult[name].estimatedDomains = estimateComplexityInBigONotation(averagedResult[name].complexity)
+    averageDurations = []
   }
   yield { done: true, value: averagedResult }
 }
@@ -271,7 +247,7 @@ export async function* chunkedAsyncTimes(count: number, chunkSize: number): Asyn
 
 export async function perf(
   algorithms: Array<AlgorithmCandidate>,
-  sizes: Array<Size> = defaultSizes,
+  sizes: Array<number> = defaultSizes,
   warm = true,
   iterations = 100,
   maxExecutionTime = 30000,

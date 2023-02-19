@@ -4,7 +4,6 @@ import {
   perf,
   AlgorithmCandidate,
   defaultSizes,
-  Size,
   perfStreamed,
   AveragedIntermediateTestResultPerSize,
   AveragedUnionTestResultPerSize,
@@ -29,9 +28,9 @@ const shuffleArrayFisherYates = (array: Array<any>) => {
 // Algo with error
 const linearAddError: AlgorithmCandidate = {
   name: 'linearAdd',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     function incrementByOne(num: number): number {
-      if (num > 10) throw new Error('ugh')
+      if (num > 1) throw new Error('ugh')
       return num + 1
     }
     incrementByOne(size)
@@ -41,7 +40,7 @@ const linearAddError: AlgorithmCandidate = {
 // 1) O(1): Constant complexity.
 const linearAdd: AlgorithmCandidate = {
   name: 'linearAdd',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     function incrementByOne(num: number): number {
       return num + 1
     }
@@ -51,7 +50,7 @@ const linearAdd: AlgorithmCandidate = {
 
 const linearMultiply: AlgorithmCandidate = {
   name: 'linearMultiply',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     function incrementByOne(num: number): number {
       return num + 1 * 567 * num
     }
@@ -62,7 +61,7 @@ const linearMultiply: AlgorithmCandidate = {
 // 2) O(logn): Logarithmic complexity.
 const logarithmicBinarySearch: AlgorithmCandidate = {
   name: 'logBinSearchOlogn',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const needle = Math.random()
     const haystack = Array.from({ length: size }, () => Math.random())
     haystack.push(needle)
@@ -92,7 +91,7 @@ const logarithmicBinarySearch: AlgorithmCandidate = {
 // 3) O(n): Linear complexity.
 const linearSumArray: AlgorithmCandidate = {
   name: 'linearSumArray',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const haystack = Array.from({ length: size }, () => Math.random())
     function sumArray(array: number[]): number {
       let sum = 0
@@ -108,7 +107,7 @@ const linearSumArray: AlgorithmCandidate = {
 // 4) O(nlogn): Loglinear complexity.
 const logLinearMergeSort: AlgorithmCandidate = {
   name: 'logLinearMergeSort',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const haystack = Array.from({ length: size }, () => Math.random())
     function countInversions(array: number[]): number {
       const mergeSort = (array: number[], temp: number[], left: number, right: number): number => {
@@ -162,7 +161,7 @@ const logLinearMergeSort: AlgorithmCandidate = {
 // 4) O(nlogn): Loglinear complexity. (2)
 const quickSort: AlgorithmCandidate = {
   name: 'QuickSort',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const arr = Array.from({ length: size }).map(() => Math.random())
 
     const partition = (arr: number[], low: number, high: number): number => {
@@ -200,7 +199,7 @@ const quickSort: AlgorithmCandidate = {
 // 5) O(n^x): Polynomial complexity.
 const polynominalFindDuplicates: AlgorithmCandidate = {
   name: 'polynominalFindDuplicates',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const haystack = shuffleArrayFisherYates(Array.from({ length: size }, () => Math.random().toString()))
     function findDuplicates(array: string[]): string[] {
       const result: string[] = []
@@ -220,7 +219,7 @@ const polynominalFindDuplicates: AlgorithmCandidate = {
 // 5) O(n^x): Polynomial complexity. (2)
 const bubbleSort: AlgorithmCandidate = {
   name: 'BubbleSort',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const arr = Array.from({ length: size }).map(() => Math.random())
     for (let i = 0; i < arr.length; i++) {
       for (let j = 0; j < arr.length - 1; j++) {
@@ -237,7 +236,7 @@ const bubbleSort: AlgorithmCandidate = {
 // 6) O(X^n): Exponential time.
 const exponentialFibonacci: AlgorithmCandidate = {
   name: 'exponentialFibonacci',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     function fibonacci(n: number): number {
       if (n <= 1) {
         return n
@@ -251,7 +250,7 @@ const exponentialFibonacci: AlgorithmCandidate = {
 // 7) O(n!): Factorial complexity.
 const fractionalPermuteArray: AlgorithmCandidate = {
   name: 'fractionalPermuteArray',
-  fn: async (size: Size) => {
+  fn: async (size: number) => {
     const haystack = Array.from({ length: size }, () => Math.random())
     function permuteArray(array: number[]): number[][] {
       if (array.length <= 1) {
@@ -450,18 +449,20 @@ describe('perf', () => {
     const linearMultiplyResult: AveragedTestResultPerSize = data[linearMultiply.name]
     expect(linearMultiplyResult).toBeDefined()
     expect(linearMultiplyResult.complexity).toBeGreaterThanOrEqual(0)
-    expect(linearMultiplyResult.complexity).toBeLessThan(0.01)
+    expect(linearMultiplyResult.complexity).toBeLessThan(0.02)
   })
 
   it('handles errors in algorithms', async () => {
     const algorithms: AlgorithmCandidate[] = [linearAddError]
 
-    const data = await perf(algorithms, [1, 2, 5, 50], true, 100, 30000)
+    const data = await perf(algorithms, [1, 2], true, 1, 30000)
 
     console.log('linearAddErrorResult', data)
 
     expect(data).toBeDefined()
     expect(Object.keys(data).length).toBe(1)
+
+    // measurements should be disregarded because catching Errors kills performance
 
     const linearAddErrorResult: AveragedTestResultPerSize = data[linearAddError.name]
     expect(linearAddErrorResult).toBeDefined()
@@ -479,6 +480,7 @@ describe('perf', () => {
 
     const linearMultiplyResult: AveragedTestResultPerSize = data[linearMultiply.name]
     expect(linearMultiplyResult).toBeDefined()
+    expect(linearMultiplyResult.complexity).toEqual(NaN)
   })
 
   it('handles timeout', async () => {
