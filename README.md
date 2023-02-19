@@ -92,9 +92,9 @@ The time and space here is not based on the actual number of operations performe
 
 The notation represents how an algorithm will run in a worst-case scenario, in other words what the maximum time or space an algorithm could use is. The complexity is written as O(x), where x is the growth rate of the algorithm in regards to n, which is the amount of data input. Throughout the rest of this post, input will be referred to as n.
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Big-O_Cheatsheet.png" height="300px" />
+<img align="center" src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Big-O_Cheatsheet.png" height="300px" />
 
-<h3 align="center">Types of Big O Notations<h3>
+<h3 align="center">Types of Big O Notations</h3>
 
 There are seven common types of big O notations. These include:
 
