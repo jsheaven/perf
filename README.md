@@ -4,7 +4,7 @@
 
 <h2 align="center">User Stories</h2>
 
-1. As a developer, I want to know what which algorithm of two or more algorithms is faster
+1. As a developer, I want to know the performance characteristics/complexity and thus the scalability of algorithms
 
 <h2 align="center">Features</h2>
 
