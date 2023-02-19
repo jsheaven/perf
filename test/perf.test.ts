@@ -521,4 +521,68 @@ describe('perf', () => {
       }
     }
   })
+
+  it('can compare what equals variant is faster: comparing two JSON.stringify()s or using Jests toEqual()', async () => {
+    const jestEquals: AlgorithmCandidate = {
+      name: 'JestEquals',
+      fn: async (size: number) => {
+        const haystack = Array.from({ length: size }, () => Math.random())
+        expect({
+          numbers: haystack,
+          foo: 'bar',
+          abc: 123,
+          bar: {
+            deeper: haystack,
+          },
+        }).toEqual({
+          numbers: haystack,
+          foo: 'bar',
+          abc: 123,
+          bar: {
+            deeper: haystack,
+          },
+        })
+      },
+    }
+    const jsonStringifyEquals: AlgorithmCandidate = {
+      name: 'JsonStringifyEquals',
+      fn: async (size: number) => {
+        const haystack = Array.from({ length: size }, () => Math.random())
+
+        JSON.stringify({
+          numbers: haystack,
+          foo: 'bar',
+          abc: 123,
+          bar: {
+            deeper: haystack,
+          },
+        }) ===
+          JSON.stringify({
+            numbers: haystack,
+            foo: 'bar',
+            abc: 123,
+            bar: {
+              deeper: haystack,
+            },
+          })
+      },
+    }
+
+    const algorithms: AlgorithmCandidate[] = [jestEquals, jsonStringifyEquals]
+
+    const data = await perf(algorithms, defaultSizes, false, 1000, 30000, 10)
+
+    expect(data).toBeDefined()
+    expect(Object.keys(data).length).toBe(2)
+
+    const jestEqualsResult: AveragedTestResultPerSize = data[jestEquals.name]
+    expect(jestEqualsResult).toBeDefined()
+
+    console.log('jestEqualsResult', jestEqualsResult, jestEqualsResult.estimatedDomains)
+
+    const jsonStringifyEqualsResult: AveragedTestResultPerSize = data[jsonStringifyEquals.name]
+    expect(jsonStringifyEqualsResult).toBeDefined()
+
+    console.log('jsonStringifyEqualsResult', jsonStringifyEqualsResult, jsonStringifyEqualsResult.estimatedDomains)
+  })
 })
