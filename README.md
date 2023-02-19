@@ -250,7 +250,7 @@ function fibonacci(n: number): number {
 fibonacci(size)
 ```
 
-You will probably never encounter algorithms using a space complexity of O(Xⁿ) in standard software engineering. It can be encountered when using Turing machines and the arithmetic model of computation, but this is extremely hard to implement using a JavaScript example, and beyond the scope of this article. Suffice to say, if O(Xⁿ) space complexity is ever encountered, it’s likely that something has gone horribly, horribly wrong.
+You will probably never encounter algorithms using a space complexity of O(Xⁿ) in standard software engineering. It can be encountered when using Turing machines and the arithmetic model of computation, but this is extremely hard to implement using a JavaScript example, and beyond the scope of this project. Suffice to say, if O(Xⁿ) space complexity is ever encountered, it’s likely that something has gone horribly, horribly wrong.
 
 <h4 align="center">O(n!): Factorial Complexity</h4>
 
