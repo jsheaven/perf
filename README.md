@@ -13,7 +13,7 @@
 - ✅ Parallel execution using async generators
 - ✅ Streaming implementation, chunked
 - ✅ Available as a simple API
-- ✅ Just `1548 byte` nano sized (ESM, gizpped)
+- ✅ Just `1403 byte` nano sized (ESM, gizpped)
 - ✅ Tree-shakable and side-effect free
 - ✅ Runs on Windows, Mac, Linux, CI tested
 - ✅ First class TypeScript support
