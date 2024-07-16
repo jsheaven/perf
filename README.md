@@ -38,7 +38,7 @@ import { perf } from '@jsheaven/perf'
 // O(1): Constant complexity.
 const incrementByOne = {
   name: 'LinearAdd',
-  fn: async (size) => {
+  fn: async (size, callIndex) => {
     function incrementByOne(num) {
       return num + 1
     }
@@ -49,7 +49,7 @@ const incrementByOne = {
 // O(n^x): Polynomial complexity
 const bubbleSort = {
   name: 'BubbleSort',
-  fn: async (size) => {
+  fn: async (size, callIndex) => {
     const arr = Array.from({ length: size }).map(() => Math.random())
     for (let i = 0; i < arr.length; i++) {
       for (let j = 0; j < arr.length - 1; j++) {
