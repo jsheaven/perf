@@ -1,6 +1,6 @@
 {
   "name": "@jsheaven/perf",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -20,14 +20,14 @@
     "type": "git"
   },
   "scripts": {
-    "pretest": "yarn build --dev",
+    "pretest": "npm run build --dev",
     "test": "NODE_OPTIONS='--experimental-vm-modules --enable-source-maps --no-warnings' jest --verbose --coverage ./test/*.test.ts",
     "clean": "rm -rf ./dist && rm -rf ./coverage",
-    "prebuild": "yarn clean",
+    "prebuild": "npm run clean",
     "integration": "node ./example/index.js",
-    "build": "yarn node --enable-source-maps ./build.mjs",
-    "precli": "yarn build",
-    "cli": "yarn node --enable-source-maps ./dist/cli.esm.js perf --foo X"
+    "build": "node --enable-source-maps ./build.mjs",
+    "precli": "npm run build",
+    "cli": "node --enable-source-maps ./dist/cli.esm.js perf --foo X"
   },
   "author": "Aron Homberg <info@aron-homberg.de>",
   "sideEffects": false,

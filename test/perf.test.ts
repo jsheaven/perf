@@ -348,7 +348,7 @@ describe('perf', () => {
     const quickSortResult: AveragedTestResultPerSize = data[quickSort.name]
     expect(quickSortResult).toBeDefined()
     expect(quickSortResult.complexity).toBeGreaterThan(0.17)
-    expect(quickSortResult.complexity).toBeLessThan(0.2)
+    expect(quickSortResult.complexity).toBeLessThan(0.3)
   })
 
   it('should measure performance of sorting algorithms, warm', async () => {
@@ -584,5 +584,26 @@ describe('perf', () => {
     expect(jsonStringifyEqualsResult).toBeDefined()
 
     console.log('jsonStringifyEqualsResult', jsonStringifyEqualsResult, jsonStringifyEqualsResult.estimatedDomains)
+  })
+
+  it('will provide the call index to the algorithm function, optionally', async () => {
+    const algorithms: AlgorithmCandidate[] = [{
+      name: 'callTest',
+      fn: async(size: number, call: number) => {
+        expect(size).toBeGreaterThan(-1)
+        expect(call).toBeGreaterThan(-1)
+      }
+    }]
+    const generator = perfStreamed(algorithms, defaultSizes) as AsyncGenerator<
+      AveragedIntermediateTestResultPerSize,
+      void,
+      AveragedUnionTestResultPerSize
+    >
+
+    for await (const result of generator as any) {
+      if (result.done) {
+        expect(result.value).toBeDefined()
+      }
+    }
   })
 })

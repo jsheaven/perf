@@ -4,17 +4,17 @@ export const defaultSizes = [
   1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
 ]
 
-export type AlgorithmFn = (size: number) => Promise<void>
+export type AlgorithmFn = (size: number, calls?: number) => Promise<void>
 
 export type TestResult = {
   name: string
   duration: number
   size: number
 }
-export const test = async (name: string, fn: AlgorithmFn, size: number): Promise<TestResult> => {
+export const test = async (name: string, fn: AlgorithmFn, size: number, calls: number): Promise<TestResult> => {
   const startTime = process.hrtime()
   try {
-    await fn(size)
+    await fn(size, calls)
   } catch (error) {
     warn('TEST_ERROR', `Test "${name}" execution failed (size: "${size}"). Measurement might be inaccurate.`)
   }
@@ -188,7 +188,7 @@ export async function* perfStreamed(
       for await (const chunk of chunkedAsyncTimes(iterations, chunkSize)) {
         const testResults = await Promise.all(
           chunk.map(async () => {
-            const { duration } = await test(name, fn, size)
+            const { duration } = await test(name, fn, size, calls)
             calls++
 
             return { name, size, duration }

@@ -25,6 +25,7 @@
 
 - yarn: `yarn add @jsheaven/perf`
 - npm: `npm install @jsheaven/perf`
+- bun: `bun add @jsheaven/perf`
 
 <h3 align="center">ESM</h3>
 
