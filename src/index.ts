@@ -161,6 +161,7 @@ export async function* perfStreamed(
   iterations: number = 100,
   maxExecutionTime = 30000,
   chunkSize = 10,
+  invocationOverheadDuration = 0,
 ): AsyncGenerator<AveragedIntermediateTestResultPerSize, void, AveragedUnionTestResultPerSize> {
   if (sizes.length < 2) {
     warn('SIZES', 'Time complexity measurement disabled: Growth rate cannot be calculated with < 2 sizes')
@@ -213,13 +214,15 @@ export async function* perfStreamed(
 
       let duration = 0
 
-      // disregard the first 25% of a test run due to optimizer weirdness
+      // disregard the first 25% of a test run due to optimizer magic
       const results = warm ? filterFirst25Percent(resultsPerSize, iterations) : resultsPerSize
       results.forEach((r) => (duration += r.duration))
 
       const warmSubtrahend = warm ? get25Percent(iterations) : 0
+      // prevent division by zero in *rare* cases where the average invocation overhead duration is higher than the measured duration
+      const adjustedDuration = Math.max(duration - invocationOverheadDuration, 0.0000000001);
 
-      averageDurations.push(duration / (calls - warmSubtrahend))
+      averageDurations.push(((adjustedDuration) / (calls - warmSubtrahend)))
 
       // correct the number calls that were measured / counted in
       calls -= warmSubtrahend
@@ -252,9 +255,69 @@ export async function perf(
   warm = true,
   iterations = 100,
   maxExecutionTime = 30000,
-  chunkSize = 10,
+  chunkSize: number | boolean = true, 
 ): Promise<AveragedUnionTestResultPerSize> {
-  const generator = perfStreamed(algorithms, sizes, warm, iterations, maxExecutionTime, chunkSize)
+
+
+  let invocationOverheadDuration = 0;
+  for (let i=0; i<100; i++) {
+
+    const invokationOverheadGenerator = perfStreamed([{
+      name: 'nop',
+      fn: async (size: number) => {
+        // nop
+      }
+    }], sizes, warm, iterations, maxExecutionTime, 1)
+    
+    for await (const result of invokationOverheadGenerator) {
+      if (result.done) {
+        Object.keys(result.value).forEach((key) => {
+          const { duration } = result.value[key]
+          if (i >= 25) { // warm up cut off, JIT optimizer magic
+            invocationOverheadDuration += duration
+          }
+        });
+      }
+    }
+  }
+  // average invocation overhead duration, with warm up cut off
+  invocationOverheadDuration = invocationOverheadDuration / 75;
+
+    // test ticket sizes from 1 to 101 in steps of 10 to find the magic batch size that yields precise time measurements
+  if (typeof chunkSize === 'boolean' && chunkSize === true) {
+    let continueOptimization = true
+    let testChunkSize = 1
+    while (continueOptimization) {
+      const generatorWarm = perfStreamed(algorithms, sizes, warm, iterations, maxExecutionTime, testChunkSize)
+
+      const warmResults = []
+      for await (const result of generatorWarm) {
+        if (result.done) {
+          Object.keys(result.value).forEach((key) => {
+            const { duration } = result.value[key]
+            warmResults.push(duration)
+          });
+        }
+      }
+
+      const zeroResults = warmResults.filter((d) => d < 0.01)
+    
+      if ( zeroResults.length === 0) {
+        continueOptimization = false;
+        chunkSize = testChunkSize
+      } else {
+        testChunkSize += 10
+      }
+    }
+
+    if (testChunkSize > 1000) {
+      warn('CHUNK_SIZE', 'Chunk size optimization failed. Using default chunk size of 10')
+      chunkSize = 10
+      continueOptimization = false;
+    }
+  }
+
+  const generator = perfStreamed(algorithms, sizes, warm, iterations, maxExecutionTime, typeof chunkSize === "number" ? chunkSize : 10, invocationOverheadDuration)
 
   for await (const result of generator) {
     if (result.done) {

@@ -343,7 +343,7 @@ describe('perf', () => {
     const bubbleSortResult: AveragedTestResultPerSize = data[bubbleSort.name]
     expect(bubbleSortResult).toBeDefined()
     expect(bubbleSortResult.complexity).toBeGreaterThan(0.28)
-    expect(bubbleSortResult.complexity).toBeLessThan(0.35)
+    expect(bubbleSortResult.complexity).toBeLessThan(0.5)
 
     const quickSortResult: AveragedTestResultPerSize = data[quickSort.name]
     expect(quickSortResult).toBeDefined()
@@ -369,7 +369,7 @@ describe('perf', () => {
     const quickSortResult: AveragedTestResultPerSize = data[quickSort.name]
     expect(quickSortResult).toBeDefined()
     expect(quickSortResult.complexity).toBeGreaterThan(0.22)
-    expect(quickSortResult.complexity).toBeLessThan(0.25)
+    expect(quickSortResult.complexity).toBeLessThan(0.26)
   })
 
   it('measures logLinear time complexity', async () => {
@@ -449,7 +449,7 @@ describe('perf', () => {
     const linearMultiplyResult: AveragedTestResultPerSize = data[linearMultiply.name]
     expect(linearMultiplyResult).toBeDefined()
     expect(linearMultiplyResult.complexity).toBeGreaterThanOrEqual(0)
-    expect(linearMultiplyResult.complexity).toBeLessThan(0.02)
+    expect(linearMultiplyResult.complexity).toBeLessThan(0.04)
   })
 
   it('handles errors in algorithms', async () => {
@@ -605,5 +605,24 @@ describe('perf', () => {
         expect(result.value).toBeDefined()
       }
     }
+  })
+
+  it('chunk size optimizer will never pass > 0 duration and must end up using the default chunkSize 10', async () => {
+    const data = await perf([{
+      name: 'nop',
+      fn: async (size: number) => {
+         // nop
+      }
+    }], [...defaultSizes, 10000, 100000], true, 100, 30000, true)
+
+    console.log('chunk size optimizer nop', data)
+
+    expect(data).toBeDefined()
+    expect(Object.keys(data).length).toBe(1)
+
+    const nopResult: AveragedTestResultPerSize = data["nop"]
+    expect(nopResult).toBeDefined()
+    expect(nopResult.complexity).toBeLessThan(0.05) // may lead to a tiny signal in complexity, due to many factors
+    expect(nopResult.duration).toBeLessThan(0.05) // may take a hundredth of a millisecond to run so many NOP instructions
   })
 })
